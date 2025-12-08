@@ -2,6 +2,11 @@ library(readxl)
 library(tidyverse)
 library(dplyr)
 library(ggplot2)
+library(broom)
+library(tidyr)
+library(ggrepel)
+library(stats)
+library(kableExtra)
 
 df_top <- read_csv("Top Youtubers Dataset.csv")
 
@@ -23,6 +28,7 @@ data_filas_sin0 <- df_top|>
 #Luego eliminamos el 25% más pequeños de youtubers (subscribers)
 
 q1_value <- summary(data_filas_sin0$subscribers)["1st Qu."]
+
 print(paste("El valor de suscriptores en el Primer Cuartil (Q1) es:", q1_value))
 
 data_filas_sin0 <- data_filas_sin0 |> 
@@ -297,6 +303,238 @@ grafico_subs_por_categoria
 #El gráfico de barras muestra qué tipos de contenido de YouTube acumulan la mayor cantidad total de suscriptores sumando todos los canales de esa categoría. Claramente, las categorías de Entertainment (Entretenimiento, con más de 5,600 millones de suscriptores) y Music (Música, con más de 4,500 millones) dominan por completo, lo que significa que la audiencia global de los principales YouTubers se concentra en ver contenido divertido y musical. Las categorías como People & Blogs, Gaming y Comedy también son muy fuertes y acumulan miles de millones de suscriptores, mientras que los nichos como Noticias o Deportes, aunque importantes, tienen una base total de suscriptores mucho menor en este grupo de canales principales. Esto refleja las preferencias generales de los espectadores de YouTube, que tienden a gravitar hacia el entretenimiento y la música por encima de otros tipos de contenido.
 
 
+# Comenzamos con PCA ------------------------------------------------------
+#Tengo de finalidad explicar versión fácil lo que aplicaré en esta tarea, ya que es algo que me costó entender, y quizás hay otras personas de la misma forma
+
+
+df_pca_select <- df_final |> 
+  select(subscribers_por_millones, video_views, video_count)
+
+#Acabas de tomar tus tres ingredientes principales para el éxito de un canal de YouTube:Suscriptores, Vistas, Cantidad de Videos
+
+# 2. Aplicar la normalización (Estandarización: media=0, desviación estándar=1)
+# Esto es necesario para evitar que 'video_views' domine por su gran magnitud.
+df_pca_normal <- scale(df_pca_select)
+
+head(df_pca_normal)
+
+#Esto sifnifica que aplicamos PCA para ver si podías combinar estos tres ingredientes en menos "sabores" sin perder el gusto.
+
+#ADJUNTAR ACÁ IMG RESULTADOS 1
+#
+
+#PC1: El PC1 es tu componente más importante. Piensa en él como el "Sabor de Ser un Canal Grande" o la "Popularidad Bruta".Significado: Como explica el 60.54% de todo lo que está pasando en tus datos, esto quiere decir que, en la mayoría de los canales, los tres ingredientes (Suscriptores, Vistas, Videos) van casi siempre de la mano. Si tienes mucho de uno, tienes mucho de los otros. Conclusión: Este PC1 es la evidencia de que hay un factor subyacente de Magnitud del Canal.
+
+#PC2: Si sumas el PC1 y el PC2, ya tienes el 92.90% de la información de tu base de datos.Conclusión: Esto es una gran victoria. Significa que ya no necesitas usar las tres variables originales. Puedes reemplazarlas por solo dos nuevas variables (PC1 y PC2) y tu análisis será casi igual de preciso (solo pierdes el 7.10% de la información).
+
+#PCA3: El PC3 es el menos importante, explicando solo el 7.10% de la varianza total.Significado: Este componente captura las diferencias más sutiles entre los canales. Por ejemplo, podría estar destacando canales que tienen muchos videos pero relativamente pocos suscriptores y vistas, o viceversa.Conclusión: Aunque es interesante, este componente no es tan crucial para entender la mayoría de los canales en tu análisis. según tus propios resultados, el PC3 no explica suficiente varianza para justificar su complejidad.
+
+#Acontinuación generamos cargas (loading). A partir de esto le ponemos nombres y significados a nuestros dos componenetes principales PCA1 y PCA2
+
+pca_result$rotation
+
+# Las cargas (loadings) te dicen cómo cada variable original contribuye a cada componente principal. Por ejemplo, si 'subscribers_por_millones' tiene una carga alta en PC1, significa que esta variable es muy importante para definir ese componente. Al final te dicen qué tan fuerte se relaciona (correlaciona) cada variable original con el nuevo componente
+
+
+#IMAGEN RESULTADO 2
+
+#PC1: Magnitud del Canal (El Factor Común) El PC1 explica más del 60% de la varianza, y sus cargas son:
+  
+#Suscriptores: Muy fuerte (0.687)
+
+#Vistas: Muy fuerte (0.698)
+
+#Video Count: Débil (0.201)
+
+#Conclusión: El PC1 representa la Magnitud, Popularidad o Éxito General del canal. Un valor alto en PC1 significa que el canal tiene, simultáneamente, muchos Suscriptores y muchas Vistas. Este es el factor común que impulsa el éxito en YouTube.
+
+
+#PCA2:Estrategia de Contenido (Volumen vs. Impacto) El PC2 explica cerca del 32% de varianza restante y sus cargas son:
+  
+#Video Count: Extremadamente fuerte (-0.976).
+
+#Suscriptores / Vistas: Muy débil (cercano a cero).
+
+#Conclusión: El PC2 representa la Estrategia o el Volumen de Contenido. Este componente es impulsado casi por completo por la Cantidad de Videos.
+
+#Si un canal tiene un valor alto en PC2 (que en este caso, debido al signo negativo, significa que tiene un Video Count bajo, o si invertimos el signo, un Video Count alto), su éxito se define por el volumen puro de videos.
+
+#El PC2 nos ayuda a diferenciar entre canales que alcanzan el éxito (PC1) publicando muchísimo (PC2) versus canales que lo hacen con pocos videos de alto impacto (bajo PC2). 
+
+#Generar Biplot del PCA
+
+#El gráfico que debes crear se llama Biplot. Este gráfico te permite ver, en un solo lugar, dos cosas:
+  
+#Dónde se ubica cada canal de YouTube en tu nuevo factor de Éxito/Magnitud (PC1) y Estrategia/Volumen (PC2).
+
+#Cómo se relacionan tus variables originales (Suscriptores, Vistas, Videos) con esos dos nuevos factores (flechas).
+
+# borrados paso a paso ----------------------------------------------------
+
+df_pca_2 <- df_pca_normal |> 
+  prcomp()
+
+df_pca_2
+
+#Resultado 3 imagen
+
+#PC1 (1.348): Este componente tiene la mayor Desviación Estándar (y el mayor Valor Propio, 1.816). Esto confirma que el PC1 es el factor más importante, explicando la mayor parte de la información (varianza) de tus datos (60.5%).
+
+#PC2 (0.985): Es el segundo factor más fuerte.
+
+#Decisión: Como vimos antes, al usar solo PC1 y PC2, ya estás explicando el 92.9% de la información total, por lo que puedes ignorar el PC3.
+
+df_pca_2 |> 
+  broom::tidy(matrix = "eigenvalues") |> 
+  kable() |> 
+  head(n = 10)
+df_pca_2 |> 
+  broom::tidy(matrix = "rotation") |> 
+  kable() |> 
+  head(n = 10)
+
+
+df_pca_2 |>
+  broom::tidy(matrix = "scores") |> 
+  pivot_wider(names_from = "PC",
+              names_prefix = "PC_",
+              values_from = "value") |>
+  kable() |> 
+  scroll_box() 
+
+df_pca_2_cat <- df_pca_2 |>
+  broom::tidy(matrix = "scores") |> 
+  pivot_wider(names_from = "PC",
+              names_prefix = "PC_",
+              values_from = "value") |> 
+  bind_cols(df_final)
+
+head(df_pca_2_cat)
+
+#GRAFICO
+
+colores_gradiente <- c("#990066", "#cc3399", "#ff6600", "#ffcc00")
+
+colores_paises <- c("#cc3399","#ff6600","#ff9900","#006699")
+
+colores_scree <- c("#99cc33", "#3399cc", "#cc3399", "#ff9900")
+
+df_pca_2_cat |> 
+  ggplot(aes(x = PC_1, y = PC_2)) +
+  geom_point(alpha = 0.5, size = 0.2) +
+  labs(x = "Componente 1 (64,5%)",
+       y = "Componente 2 (10%)") +
+  theme_linedraw() +
+  theme(legend.position = "none")
+```
+
+#Agregamos *kernel density estimation*:
+  
+df_pca_2_cat |> 
+  ggplot(aes(x = PC_1, y = PC_2)) +
+  geom_point(alpha = 0.5, size = 0.2) +
+  geom_density_2d(aes(color = after_stat(level)), linewidth = 0.8) +
+  scale_color_gradientn(colours = colores_gradiente) +
+  labs(x = "Componente 1 (64,5%)",
+       y = "Componente 2 (10%)") +
+  theme_linedraw() +
+  theme(legend.position = "none")
+
+
+#_____________-
+
+#BORRADOR DE INTENTO DE GRÁFICO (NO FUNCIONA)
+
+#ejecutar pca
+pca_result <- prcomp(df_pca_normal)
+
+#colocamos los puntos en la base completa
+
+df_pca_scores <- pca_result |>
+  broom::tidy(matrix = "scores") |> 
+  pivot_wider(names_from = "PC",
+              names_prefix = "PC_",
+              values_from = "value") |> 
+  # Unimos las coordenadas PC1 y PC2 al dataframe original de canales
+  bind_cols(df_final)
+
+# 3. Obtener las Coordenadas de las Variables (Rotation - Las flechas)
+df_pca_rotation <- pca_result |> 
+  broom::tidy(matrix = "rotation") |> 
+  filter(PC %in% c(1, 2)) |> # Solo PC1 y PC2
+  pivot_wider(names_from = PC, 
+              names_prefix = "PC_", 
+              values_from = value) |>
+  rename(variable = column)
+
+# Definimos un factor de escala para que las flechas se vean grandes en el gráfico
+factor_escala <- 5 
+df_pca_rotation <- df_pca_rotation |>
+  mutate(
+    PC_1_scaled = PC_1 * factor_escala,
+    PC_2_scaled = PC_2 * factor_escala
+  )
+
+# Filtraremos canales que están en los extremos (los más grandes o los más extremos en volumen/estrategia)
+df_outliers_pca <- df_pca_scores |>
+  filter(PC_1 > quantile(PC_1, 0.95) | # Top 5% en Magnitud (PC1)
+           abs(PC_2) > quantile(abs(PC_2), 0.95)) # Top 5% en Estrategia/Volumen (PC2 extremo)
+
+# --- PASO 2: GENERAR EL BI PLOT FINAL ---
+grafico_biplot_mejorado <- ggplot() +
+  
+  # 1. Puntos: Muestra cada canal de YouTube (Más pequeños y transparentes)
+  geom_point(
+    data = df_pca_scores,
+    aes(x = PC_1, y = PC_2, color = category),
+    alpha = 0.3, # Reducimos la opacidad
+    size = 1.5
+  ) +
+  
+  # 2. Vectores (Flechas):
+  geom_segment(
+    data = df_pca_rotation,
+    aes(x = 0, y = 0, xend = PC_1_scaled, yend = PC_2_scaled),
+    arrow = arrow(length = unit(0.2, "cm")),
+    color = "black", 
+    linewidth = 0.8
+  ) +
+  
+  # 3. Etiquetas de las Variables (Flechas):
+  geom_label_repel(
+    data = df_pca_rotation,
+    aes(x = PC_1_scaled, y = PC_2_scaled, label = variable),
+    color = "black",
+    size = 3.5,
+    box.padding = 0.5
+  ) +
+  
+  # 4. Etiquetas de los Outliers (Nombres de los Canales más interesantes)
+  geom_text_repel(
+    data = df_outliers_pca, # <--- ¡Aquí se usa la variable que faltaba!
+    aes(x = PC_1, y = PC_2, label = youtuber),
+    size = 3,
+    max.overlaps = 50, 
+    segment.color = 'grey50'
+  ) +
+  
+  # 5. Configuración
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "grey") +
+  
+  labs(
+    x = "PC1: Magnitud y Popularidad (60.5%)",
+    y = "PC2: Estrategia de Contenido/Volumen (32.4%)",
+    title = "Biplot: Canales de YouTube en las Dimensiones de Éxito",
+    subtitle = "Los puntos más extremos han sido etiquetados para su interpretación.",
+    color = "Categoría"
+  ) +
+  
+  theme_minimal()
+
+
+
+
 # instrucciones -----------------------------------------------------------
 
 
@@ -304,7 +542,6 @@ grafico_subs_por_categoria
 #2. Dejar una base de datos que tenga, youtuber, subsicritores, views y número de videos. 
 #3. Hacer un indicador tomando 3 variables con las que haré el indicador: suscriptores, views y número de videos. Youtuber no porqeu es unidad de análisis - otra base de datos qeu se llame como varibles de pca. Con esta base de datos hacer pasos que la profe entregó. 
 
-#4. Recomienda antes de comenzar con el pca hacer gráficos exploratorios: 1. lineas: x año y: número de youtuber ¿por catgeoria, y así vemos su evolución por categoría (grafico de lineas de tiempo)- cruzar subscriterios con números de video (gráfico de disperión) si queda muy normal aplicar otras variables si quda muy concentrada, dinero siempre debe estar transofrmado a lograritmo natural.  
 #5. Luego se hace el pca, edepende de cómo queden los gráficos exploratorios, hacer summary y eliminar los outlayers.
 
 #*Sugerencia: *usar ggplot para pca,
