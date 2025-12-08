@@ -7,6 +7,7 @@ library(tidyr)
 library(ggrepel)
 library(stats)
 library(kableExtra)
+library(rlang)
 
 df_top <- read_csv("Top Youtubers Dataset.csv")
 
@@ -24,6 +25,7 @@ data_filas_sin0 <- df_top|>
          category != "na",
          !is.na(category),
          started >= 2005)
+
 
 #Luego eliminamos el 25% más pequeños de youtubers (subscribers)
 
@@ -43,13 +45,101 @@ summary(data_filas_sin0$subscribers)
 df_final <- data_filas_sin0 |> 
   mutate(subscribers_por_millones = subscribers / 1000000)
 
+
+#Eliminamos outlaers que podrían perjudicar nuestro análisis
+
+summary(df_final$subscribers)
+summary(df_final$video_views)
+summary(df_final$video_count)
+
+
+# 1. Subscribers ----------------------------------------------------------
+
+Q1_sub <- 19500000
+Q3_sub <- 33375000
+IQR_sub <- Q3_sub - Q1_sub
+
+# Calcular límites
+limite_inferior_sub <- Q1_sub - 1.5 * IQR_sub
+limite_superior_sub <- Q3_sub + 1.5 * IQR_sub
+
+
+# --- 2. Filtrar para eliminar outliers ---
+# Se mantiene solo las filas donde 'subscribers' esté dentro del rango
+df_final_clean <- df_final[df_final$subscribers >= limite_inferior_sub & 
+                             df_final$subscribers <= limite_superior_sub, ]
+
+#  En este caso, el máximo (284,000,000) está muy por encima del límite superior
+# (54,187,500), por lo que será eliminado.
+
+# --- 1. Definir los límites para 'video_views' ---
+# Usamos notación científica para mayor precisión
+Q1_views <- 6.917e+09
+Q3_views <- 1.909e+10
+IQR_views <- Q3_views - Q1_views
+
+# Calcular límites
+limite_inferior_views <- Q1_views - 1.5 * IQR_views
+limite_superior_views <- Q3_views + 1.5 * IQR_views
+
+# Imprimir límites (opcional, para revisar)
+print(paste("Límite Inferior (video_views):", limite_inferior_views))
+print(paste("Límite Superior (video_views):", limite_superior_views))
+
+# Filtrar el dataframe para eliminar outliers 
+# Aplicamos el filtro sobre el df que ya limpiamos de 'subscribers'
+df_final_clean <- df_final_clean[df_final_clean$video_views >= limite_inferior_views & 
+                                 df_final_clean$video_views <= limite_superior_views, ]
+
+# El máximo (2.586e+11) es un outlier y será eliminado.
+
+# 2. Views ----------------------------------------------------------------
+
+# Definimos los límites
+Q1_views <- 6.917e+09
+Q3_views <- 1.909e+10
+IQR_views <- Q3_views - Q1_views
+
+# Calcular límites
+limite_inferior_views <- Q1_views - 1.5 * IQR_views
+limite_superior_views <- Q3_views + 1.5 * IQR_views
+
+# Filtrar para eliminar outliers
+# Aplicamos el filtro sobre el df que ya limpiamos de 'subscribers'
+df_final_clean <- df_final_clean[df_final_clean$video_views >= limite_inferior_views & 
+                                   df_final_clean$video_views <= limite_superior_views, ]
+
+# El máximo (2.586e+11) es un outlier y será eliminado.
+
+# 3. Video_count ----------------------------------------------------------
+
+# Definir los límites para
+Q1_count <- 537
+Q3_count <- 4448
+IQR_count <- Q3_count - Q1_count
+
+# Calcular límites
+limite_inferior_count <- Q1_count - 1.5 * IQR_count
+limite_superior_count <- Q3_count + 1.5 * IQR_count
+
+
+#  Filtrar el df para eliminar outliers ---
+# Aplicamos el filtro final
+df_final_clean <- df_final_clean[df_final_clean$video_count >= limite_inferior_count & 
+                                   df_final_clean$video_count <= limite_superior_count, ]
+
+# El máximo (386,195) es un outlier y será eliminado.
+
+
+# Gráficos exploratorios --------------------------------------------------
+
 #Haremos gráficos exploratorios
 
 #1 gráfico de líneas
 
 #Contamos cuantos canales hay por categorías
 
-conteo_categorias <- df_final |> 
+conteo_categorias <- df_final_clean |> 
   group_by(category) |> 
   summarise(cantidad = n(), .groups = 'drop') |> 
   arrange(desc(cantidad))
@@ -74,17 +164,17 @@ grafico_barras_categorias
 
 #A partir de esto, para hacer el gráfico de líneas se decide incorporar solo las 9 categorías más predominantes. 
 
-top_categories <- df_final |> 
+top_categories <- df_final_clean |> 
   group_by(category) |> 
   summarise(total_count = n()) |> 
   arrange(desc(total_count)) |> 
-  slice_head(n = 9) |>  # Escogemos los nombres de las 12 primeras
+  slice_head(n = 9) |>  
   pull(category)
 
 top_categories
 
 
-df_top_9_categories <- df_final |>
+df_top_9_categories <- df_final_clean |>
   filter(category %in% top_categories)
 
 # Agrupamos por año de inicio y categoría para contar la cantidad de canales
@@ -128,15 +218,17 @@ grafico_lineas_evolucion <- ggplot(df_top_9_categories,
 grafico_lineas_evolucion
 
 
-#El gráfico de líneas muestra que las categorías de Entretenimiento y Música han sido, históricamente, las más populares a la hora de crear nuevos canales exitosos, con grandes picos de actividad especialmente entre 2014 y 2017, que fue el gran momento de crecimiento de YouTube. Aunque categorías como People & Blogs y Gaming también han tenido años de auge, en general, el gráfico nos dice que cada vez es más difícil para un canal completamente nuevo (creado después de 2021) entrar en este grupo de élite de Top YouTubers, lo que sugiere que el mercado está saturado, y los canales más antiguos y grandes dominan ahora la plataforma.
+#El gráfico de Evolución Anual del Número de Canales Creados (Top 9 Categorías) demuestra que las categorías de Entertainment y Music han sido históricamente las más prolíficas en generar canales exitosos, con el período de 2014 a 2017 destacándose como la era de mayor oportunidad, donde la creación de canales top alcanzó sus picos máximos, incluyendo también el auge de People & Blogs y Education. Sin embargo, a partir de 2017, la tendencia de creación de canales de élite se revierte y cae drásticamente, sugiriendo una saturación del mercado y una consolidación de la plataforma, pues la creación de nuevos canales exitosos se reduce casi a cero en los años más recientes (2022 y 2023), lo que indica que los canales grandes y antiguos dominan ahora la atención de la audiencia, dificultando la entrada de nuevos creadores a este grupo de élite.
 
-#gráficos de disperción
+
+# Gráficos de dispersión  -------------------------------------------------
+
 
 #A.comparación de cantidad de videos por canal y suscriptores (millones)
 
 
 ggplot(
-  df_final, 
+  df_final_clean, 
   aes(
     x = video_count,
     y = subscribers_por_millones
@@ -149,7 +241,7 @@ ggplot(
   scale_y_log10(labels = scales::comma, 
                 breaks = c(1, 5, 10, 50, 100, 200, 300)) + 
   geom_text(
-    data = df_final %>% 
+    data = df_final_clean %>% 
       filter(subscribers_por_millones > 100),
     aes(label = youtuber),
     size = 3,
@@ -172,17 +264,17 @@ Ambos ejes usan escala logarítmica.",
     axis.title = element_text(size = 11)
   )
 
-#El gráfico de dispersión, que usa una escala especial (logarítmica) para ambos ejes, compara la Cantidad de Videos por Canal con la base de Suscriptores, y muestra que la relación es muy débil. La línea de tendencia es casi plana, lo que indica que subir más videos no garantiza tener más suscriptores. Hay una gran cantidad de canales que han subido miles o decenas de miles de videos (extremo derecho) pero se mantienen en el mismo nivel de suscriptores que canales que han subido mucho menos. Solo los outliers extremos, como MrBeast y T-Series, demuestran que, al combinar una gran cantidad de videos con una marca poderosa, es posible alcanzar los niveles más altos de suscriptores, pero para la mayoría de los canales, la cantidad de videos no es el factor determinante.
+#El gráfico de Relación entre Videos Publicados y Suscriptores, utilizando escalas logarítmicas en ambos ejes para mitigar el efecto de la asimetría, revela una conclusión fundamental: si bien existe una correlación positiva inicial donde un volumen bajo de videos (menos de 100) es necesario para construir la base de suscriptores, la tendencia principal indica que la cantidad masiva de videos (más de 200) tiene rendimientos decrecientes en términos de adquisición de audiencia. La línea de ajuste se aplana y se mantiene casi horizontal en el rango de 100 a 10,000 videos, mostrando una alta dispersión de puntos. Esto sugiere que, entre los canales exitosos, la calidad, el nicho o la antigüedad del canal son factores mucho más decisivos para el crecimiento de suscriptores que la simple acumulación de publicaciones.
 
 #B. Subscriptores vs vistas
 
 #nos aseguramos de tener escala en millones en vistas
 
-df_final <- df_final |> 
+df_final_clean <- df_final_clean |> 
   mutate(video_views_por_millones = video_views / 1000000)
 
 ggplot(
-  df_final, 
+  df_final_clean, 
   aes(
     # Eje X: Vistas totales escaladas a millones
     x = video_views_por_millones, 
@@ -197,7 +289,7 @@ ggplot(
   scale_y_log10(labels = scales::comma, 
                 breaks = c(1, 5, 10, 50, 100, 200, 300)) + 
   geom_text(
-    data = df_final %>% 
+    data = df_final_clean %>% 
       filter(subscribers_por_millones > 100 &
                video_views_por_millones < 90000),
     aes(label = youtuber),
@@ -220,12 +312,12 @@ Ambos ejes usan escala logarítmica.",
     axis.title = element_text(size = 11)
   )
 
-#La curva de tendencia (loess) tiene dos partes: la zona plana a la izquierda indica que en los canales medianos es muy difícil convertir las vistas en suscriptores, ya que hay mucha competencia y el crecimiento es lento. Sin embargo, al alcanzar un punto clave de popularidad (cerca de 10,000 millones de vistas), la curva se dispara hacia arriba, lo que significa que en los canales gigantes (como MrBeast) el crecimiento se vuelve explosivo; su fama y el algoritmo de YouTube hacen que cada nueva vista genere muchos más suscriptores de manera eficiente, lo que confirma que los canales que logran pasar la fase difícil son recompensados con un crecimiento mucho más rápido.
+#La curva de tendencia tiene dos partes: la zona plana a la izquierda indica que en los canales medianos es muy difícil convertir las vistas en suscriptores, ya que hay mucha competencia y el crecimiento es lento. Sin embargo, al alcanzar un punto clave de popularidad (cerca de 10,000 millones de vistas), la curva se dispara hacia arriba, lo que significa que en los canales gigantes, el crecimiento se vuelve explosivo; su fama y el algoritmo de YouTube hacen que cada nueva vista genere muchos más suscriptores de manera eficiente, lo que confirma que los canales que logran pasar la fase difícil son recompensados con un crecimiento mucho más rápido.
 
 #C. Cantidad de videos vs suscriptores (escala logarítmica en eje X)
 
 ggplot(
-  df_final, 
+  df_final_clean, 
   aes(
     # Eje X: Vistas totales escaladas a millones (CORRECTO)
     x = video_views_por_millones, 
@@ -259,7 +351,7 @@ Ambos ejes usan escala logarítmica.",
 
 # 1. Agrupar y Sumar Suscriptores por Categoría
 # Calculamos el total de suscriptores (en millones) para cada categoría
-df_subs_por_categoria <- df_final |>
+df_subs_por_categoria <- df_final_clean |>
   group_by(category) |>
   summarise(
     total_subscribers_millones = sum(subscribers_por_millones, na.rm = TRUE),
@@ -300,14 +392,14 @@ grafico_subs_por_categoria <- ggplot(
 # Mostrar el gráfico
 grafico_subs_por_categoria
 
-#El gráfico de barras muestra qué tipos de contenido de YouTube acumulan la mayor cantidad total de suscriptores sumando todos los canales de esa categoría. Claramente, las categorías de Entertainment (Entretenimiento, con más de 5,600 millones de suscriptores) y Music (Música, con más de 4,500 millones) dominan por completo, lo que significa que la audiencia global de los principales YouTubers se concentra en ver contenido divertido y musical. Las categorías como People & Blogs, Gaming y Comedy también son muy fuertes y acumulan miles de millones de suscriptores, mientras que los nichos como Noticias o Deportes, aunque importantes, tienen una base total de suscriptores mucho menor en este grupo de canales principales. Esto refleja las preferencias generales de los espectadores de YouTube, que tienden a gravitar hacia el entretenimiento y la música por encima de otros tipos de contenido.
+#El gráfico de barras muestra qué tipos de contenido de YouTube acumulan la mayor cantidad total de suscriptores sumando todos los canales de esa categoría. Claramente, las categorías de Entertainment (Entretenimiento, con 3961 millones de suscriptores) y Music (Música, con más de 2925 millones) dominan por completo, lo que significa que la audiencia global de los principales YouTubers se concentra en ver contenido divertido y musical. Las categorías como People & Blogs, Gaming y Comedy también son muy fuertes y acumulan miles de millones de suscriptores, mientras que los nichos como Noticias o Deportes, aunque importantes, tienen una base total de suscriptores mucho menor en este grupo de canales principales. Esto refleja las preferencias generales de los espectadores de YouTube, que tienden a gravitar hacia el entretenimiento y la música por encima de otros tipos de contenido.
 
 
 # Comenzamos con PCA ------------------------------------------------------
 #Tengo de finalidad explicar versión fácil lo que aplicaré en esta tarea, ya que es algo que me costó entender, y quizás hay otras personas de la misma forma
 
 
-df_pca_select <- df_final |> 
+df_pca_select <- df_final_clean |> 
   select(subscribers_por_millones, video_views, video_count)
 
 #Acabas de tomar tus tres ingredientes principales para el éxito de un canal de YouTube:Suscriptores, Vistas, Cantidad de Videos
@@ -317,6 +409,12 @@ df_pca_select <- df_final |>
 df_pca_normal <- scale(df_pca_select)
 
 head(df_pca_normal)
+
+# Aplicar el PCA (usando prcomp, que trabaja con las variables)
+
+pca_result <- prcomp(df_pca_normal)
+
+summary(pca_result)
 
 #Esto sifnifica que aplicamos PCA para ver si podías combinar estos tres ingredientes en menos "sabores" sin perder el gusto.
 
