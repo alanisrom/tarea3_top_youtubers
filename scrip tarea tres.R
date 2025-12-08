@@ -9,6 +9,10 @@ library(stats)
 library(kableExtra)
 library(rlang)
 
+
+# LIMPIEZA DE BASE DE DATOS -----------------------------------------------
+
+
 df_top <- read_csv("Top Youtubers Dataset.csv")
 
 df_top <- df_top |> 
@@ -16,7 +20,6 @@ df_top <- df_top |>
 
 colnames(df_top)
 
-#Eliminamos aquellos n que en variables poseen 0 y que en categoría salga na. además, hacemos filtro por año, ya que youtube se filtró en 2005 (Eliminar el outlier de tiempo (started < 2005)). 
 
 data_filas_sin0 <- df_top|> 
   filter(subscribers != 0,
@@ -64,34 +67,9 @@ limite_inferior_sub <- Q1_sub - 1.5 * IQR_sub
 limite_superior_sub <- Q3_sub + 1.5 * IQR_sub
 
 
-# --- 2. Filtrar para eliminar outliers ---
-# Se mantiene solo las filas donde 'subscribers' esté dentro del rango
+# Filtrar para eliminar outliers: se mantiene solo las filas donde 'subscribers' esté dentro del rango
 df_final_clean <- df_final[df_final$subscribers >= limite_inferior_sub & 
                              df_final$subscribers <= limite_superior_sub, ]
-
-#  En este caso, el máximo (284,000,000) está muy por encima del límite superior
-# (54,187,500), por lo que será eliminado.
-
-# --- 1. Definir los límites para 'video_views' ---
-# Usamos notación científica para mayor precisión
-Q1_views <- 6.917e+09
-Q3_views <- 1.909e+10
-IQR_views <- Q3_views - Q1_views
-
-# Calcular límites
-limite_inferior_views <- Q1_views - 1.5 * IQR_views
-limite_superior_views <- Q3_views + 1.5 * IQR_views
-
-# Imprimir límites (opcional, para revisar)
-print(paste("Límite Inferior (video_views):", limite_inferior_views))
-print(paste("Límite Superior (video_views):", limite_superior_views))
-
-# Filtrar el dataframe para eliminar outliers 
-# Aplicamos el filtro sobre el df que ya limpiamos de 'subscribers'
-df_final_clean <- df_final_clean[df_final_clean$video_views >= limite_inferior_views & 
-                                 df_final_clean$video_views <= limite_superior_views, ]
-
-# El máximo (2.586e+11) es un outlier y será eliminado.
 
 # 2. Views ----------------------------------------------------------------
 
@@ -108,8 +86,6 @@ limite_superior_views <- Q3_views + 1.5 * IQR_views
 # Aplicamos el filtro sobre el df que ya limpiamos de 'subscribers'
 df_final_clean <- df_final_clean[df_final_clean$video_views >= limite_inferior_views & 
                                    df_final_clean$video_views <= limite_superior_views, ]
-
-# El máximo (2.586e+11) es un outlier y será eliminado.
 
 # 3. Video_count ----------------------------------------------------------
 
@@ -128,16 +104,15 @@ limite_superior_count <- Q3_count + 1.5 * IQR_count
 df_final_clean <- df_final_clean[df_final_clean$video_count >= limite_inferior_count & 
                                    df_final_clean$video_count <= limite_superior_count, ]
 
-# El máximo (386,195) es un outlier y será eliminado.
-
-
 # Gráficos exploratorios --------------------------------------------------
 
 #Haremos gráficos exploratorios
 
-#1 gráfico de líneas
 
-#Contamos cuantos canales hay por categorías
+# 1 gráfico de líneas -----------------------------------------------------
+
+
+#Contamos cuántos canales hay por categorías
 
 conteo_categorias <- df_final_clean |> 
   group_by(category) |> 
@@ -218,10 +193,7 @@ grafico_lineas_evolucion <- ggplot(df_top_9_categories,
 grafico_lineas_evolucion
 
 
-#El gráfico de Evolución Anual del Número de Canales Creados (Top 9 Categorías) demuestra que las categorías de Entertainment y Music han sido históricamente las más prolíficas en generar canales exitosos, con el período de 2014 a 2017 destacándose como la era de mayor oportunidad, donde la creación de canales top alcanzó sus picos máximos, incluyendo también el auge de People & Blogs y Education. Sin embargo, a partir de 2017, la tendencia de creación de canales de élite se revierte y cae drásticamente, sugiriendo una saturación del mercado y una consolidación de la plataforma, pues la creación de nuevos canales exitosos se reduce casi a cero en los años más recientes (2022 y 2023), lo que indica que los canales grandes y antiguos dominan ahora la atención de la audiencia, dificultando la entrada de nuevos creadores a este grupo de élite.
-
-
-# Gráficos de dispersión  -------------------------------------------------
+# GRÁFICOS DE DISPERSIÓN  -------------------------------------------------
 
 
 #A.comparación de cantidad de videos por canal y suscriptores (millones)
@@ -264,8 +236,6 @@ Ambos ejes usan escala logarítmica.",
     axis.title = element_text(size = 11)
   )
 
-#El gráfico de Relación entre Videos Publicados y Suscriptores, utilizando escalas logarítmicas en ambos ejes para mitigar el efecto de la asimetría, revela una conclusión fundamental: si bien existe una correlación positiva inicial donde un volumen bajo de videos (menos de 100) es necesario para construir la base de suscriptores, la tendencia principal indica que la cantidad masiva de videos (más de 200) tiene rendimientos decrecientes en términos de adquisición de audiencia. La línea de ajuste se aplana y se mantiene casi horizontal en el rango de 100 a 10,000 videos, mostrando una alta dispersión de puntos. Esto sugiere que, entre los canales exitosos, la calidad, el nicho o la antigüedad del canal son factores mucho más decisivos para el crecimiento de suscriptores que la simple acumulación de publicaciones.
-
 #B. Subscriptores vs vistas
 
 #nos aseguramos de tener escala en millones en vistas
@@ -276,9 +246,7 @@ df_final_clean <- df_final_clean |>
 ggplot(
   df_final_clean, 
   aes(
-    # Eje X: Vistas totales escaladas a millones
     x = video_views_por_millones, 
-    # Eje Y: Suscriptores escalados a millones
     y = subscribers_por_millones 
   )
 ) +
@@ -312,20 +280,17 @@ Ambos ejes usan escala logarítmica.",
     axis.title = element_text(size = 11)
   )
 
-#La curva de tendencia tiene dos partes: la zona plana a la izquierda indica que en los canales medianos es muy difícil convertir las vistas en suscriptores, ya que hay mucha competencia y el crecimiento es lento. Sin embargo, al alcanzar un punto clave de popularidad (cerca de 10,000 millones de vistas), la curva se dispara hacia arriba, lo que significa que en los canales gigantes, el crecimiento se vuelve explosivo; su fama y el algoritmo de YouTube hacen que cada nueva vista genere muchos más suscriptores de manera eficiente, lo que confirma que los canales que logran pasar la fase difícil son recompensados con un crecimiento mucho más rápido.
 
-#C. Cantidad de videos vs suscriptores (escala logarítmica en eje X)
+#C. Cantidad de videos vs vistas 
 
 ggplot(
   df_final_clean, 
   aes(
-    # Eje X: Vistas totales escaladas a millones (CORRECTO)
     x = video_views_por_millones, 
-    # Eje Y: Cantidad de Videos (CORRECTO)
     y = video_count 
   )
 ) +
-  geom_point(color = "#0072B2", size = 2, alpha = 0.7) + # Nuevo color de punto
+  geom_point(color = "#0072B2", size = 2, alpha = 0.7) + 
   geom_smooth(method = "lm", color = "#8B1C62") + 
   scale_x_log10(labels = scales::comma, 
                 breaks = c(100, 1000, 10000, 100000, 1000000)) + 
@@ -345,12 +310,13 @@ Ambos ejes usan escala logarítmica.",
     axis.title = element_text(size = 11)
   )
 
-#El gráfico nos muestra si subir más videos ayuda a un canal a tener más vistas en total. Vemos una línea recta ascendente que confirma que, en promedio, sí hay una relación positiva: los canales que han subido más videos (Eje Y) suelen tener más vistas (Eje X). Sin embargo, el gran esparcimiento de puntos alrededor de esa línea nos dice que el volumen no lo es todo. Por ejemplo, hay canales que han subido muchísimos videos, pero no han acumulado tantas vistas (quedan por encima de la línea), mientras que otros canales han subido pocos videos pero han tenido un éxito enorme en vistas (quedan por debajo de la línea, en la parte derecha). Esto significa que aunque subir mucho contenido ayuda, la clave para el éxito masivo es la eficiencia o la calidad de los videos, pues unos pocos videos virales pueden superar el volumen de miles de videos de bajo impacto.
 
-#3. Gráfico de barras: Suma total de suscriptores por categoría
 
-# 1. Agrupar y Sumar Suscriptores por Categoría
-# Calculamos el total de suscriptores (en millones) para cada categoría
+# 3. Gráfico de barras: Suma total de suscriptores por categoría ----------
+
+
+# 1. Agrupar y Sumar Suscriptores por Categoría: Calculamos el total de suscriptores (en millones) para cada categoría
+
 df_subs_por_categoria <- df_final_clean |>
   group_by(category) |>
   summarise(
@@ -392,20 +358,13 @@ grafico_subs_por_categoria <- ggplot(
 # Mostrar el gráfico
 grafico_subs_por_categoria
 
-#El gráfico de barras muestra qué tipos de contenido de YouTube acumulan la mayor cantidad total de suscriptores sumando todos los canales de esa categoría. Claramente, las categorías de Entertainment (Entretenimiento, con 3961 millones de suscriptores) y Music (Música, con más de 2925 millones) dominan por completo, lo que significa que la audiencia global de los principales YouTubers se concentra en ver contenido divertido y musical. Las categorías como People & Blogs, Gaming y Comedy también son muy fuertes y acumulan miles de millones de suscriptores, mientras que los nichos como Noticias o Deportes, aunque importantes, tienen una base total de suscriptores mucho menor en este grupo de canales principales. Esto refleja las preferencias generales de los espectadores de YouTube, que tienden a gravitar hacia el entretenimiento y la música por encima de otros tipos de contenido.
 
-
-# Comenzamos con PCA ------------------------------------------------------
-#Tengo de finalidad explicar versión fácil lo que aplicaré en esta tarea, ya que es algo que me costó entender, y quizás hay otras personas de la misma forma
+# APLICAMOS PCA ------------------------------------------------------
 
 
 df_pca_select <- df_final_clean |> 
   select(subscribers_por_millones, video_views, video_count)
 
-#Acabas de tomar tus tres ingredientes principales para el éxito de un canal de YouTube:Suscriptores, Vistas, Cantidad de Videos
-
-# Aplicar la normalización (Estandarización: media=0, desviación estándar=1)
-# Esto es necesario para evitar que 'video_views' domine por su gran magnitud.
 df_pca_normal <- scale(df_pca_select)
 
 head(df_pca_normal)
@@ -416,64 +375,10 @@ pca_result <- prcomp(df_pca_normal)
 
 summary(pca_result)
 
-#Esto sifnifica que aplicamos PCA para ver si podías combinar estos tres ingredientes en menos "sabores" sin perder el gusto.
-
-#ADJUNTAR ACÁ IMG RESULTADOS 1
-
-
-#PC1: El PC1 es tu componente más importante. Piensa en él como el "Sabor de Ser un Canal Grande" o la "Popularidad Bruta". Significado: Como explica el 50.29% de la varianza total de los datos, esto quiere decir que, en la estructura de los canales, los tres ingredientes (Subscribers, Video Views, Video Count) están fuertemente correlacionados. Si un canal es grande en una métrica, tiende a serlo en las otras. En Conclusión, este PC1 es la evidencia de que hay un factor subyacente de Magnitud del Canal.
-
-#PC2: Si sumas el PC1 y el PC2, ya tienes el 82.95% de la información de tu base de datos. Conclusión: Esto es una gran victoria. Significa que ya no necesitas usar las tres variables originales. Puedes reemplazarlas por solo dos nuevas variables (PC1 y PC2) y tu análisis será casi igual de preciso (solo pierdes el 17.05% de la información).
-
-#PCA3: El PC3 es el menos importante, explicando solo el 17.05% de la varianza total. Significado: Este componente captura las diferencias más sutiles entre los canales. Por ejemplo, podría estar destacando canales que tienen muchos videos pero relativamente pocos suscriptores y vistas, o viceversa. Conclusión: Aunque es interesante, este componente no es tan crucial para entender la mayoría de los canales en tu análisis. Según tus propios resultados, el PC3 no explica suficiente varianza para justificar su complejidad y debe ser descartado.
-
-#Aunque el PC3 (con una desviación estándar de $0.7152$) no cumple con el Criterio de Kaiser (que sugiere retener solo los componentes con una desviación estándar mayor a 1), el criterio del 80-90% de Varianza Acumulada es a menudo preferido en la práctica para la visualización y la interpretación, y tú estás en el 82.95%.
-
-#Acontinuación generamos cargas (loading). A partir de esto le ponemos nombres y significados a nuestros dos componenetes principales PCA1 y PCA2
-
 pca_result$rotation
 
-# Las cargas (loadings) te dicen cómo cada variable original contribuye a cada componente principal. Por ejemplo, si 'subscribers_por_millones' tiene una carga alta en PC1, significa que esta variable es muy importante para definir ese componente. Al final te dicen qué tan fuerte se relaciona (correlaciona) cada variable original con el nuevo componente. Cuanto más cerca esté un número de 1 o -1, más fuertemente se relaciona esa variable con el componente.
 
-
-#IMAGEN RESULTADO 2
-
-#PC1: El PC1 explica el 50.29% de la varianza total, y sus cargas son:
-
-#Suscriptores: Muy fuerte (-0.668)
-
-#Vistas: Muy fuerte (-0.699)
-
-#Video Count: Débil (-0.255)
-
-# El PC1 representa la Magnitud, Popularidad o Éxito General del canal. Un valor extremo (negativo) en PC1 significa que el canal tiene, simultáneamente, muchos Suscriptores y muchas Vistas. Este es el factor común que impulsa el éxito en YouTube.
-
-
-#PCA2:El PC2 explica el 32.66% de la varianza total (acumulando el 82.95% con PC1) y sus cargas son:
-
-#Video Count: Extremadamente fuerte (+0.951).
-
-#Las cargas de subscribers_por_millones (-0.305) y video_views (-0.056) son mucho más bajas (cercanas a cero).
-
-#En cnclusión, El PC2 representa la Estrategia o el Volumen de Contenido. Este componente es impulsado casi por completo por la Cantidad de Videos. Si un canal tiene un valor positivo alto en PC2, su éxito se define por el volumen puro de videos (Video Count alto). El PC2 nos ayuda a diferenciar entre canales que alcanzan el éxito (PC1) publicando muchísimo (PC2 alto) versus canales que lo hacen con pocos videos de alto impacto (PC2 bajo).
-
-#PC3: El PC3 captura la varianza que queda, destacando una diferencia clave entre las métricas de audiencia. Sus cargas son:
-
-#subscribers_por_millones tiene una carga negativa alta de -0.679.
-
-#video_views tiene una carga positiva alta de +0.713.
-
-#A partir de esto, este componente indica un trade-off (intercambio) o una diferencia en la eficiencia de conversión. Un canal con un PC3 positivo alto tiende a tener muchas video_views en relación con sus subscribers. Un canal con un PC3 bajo (negativo) tiende a tener muchos subscribers que han generado menos video_views.
-
-
-# Generar Biplot ----------------------------------------------------------
-
-
-#El gráfico que debes crear se llama Biplot. Este gráfico te permite ver, en un solo lugar, dos cosas:
-  
-#Dónde se ubica cada canal de YouTube en tu nuevo factor de Éxito/Magnitud (PC1) y Estrategia/Volumen (PC2).
-
-#Cómo se relacionan tus variables originales (Suscriptores, Vistas, Videos) con esos dos nuevos factores (flechas).
+# VISUALIZACIONES ----------------------------------------------------------
 
 
 df_pca_2 <- df_pca_normal |> 
@@ -508,7 +413,7 @@ df_pca_2_cat <- df_pca_2 |>
 
 head(df_pca_2_cat)
 
-#GRAFICO
+#Gráfico 1
 
 colores_gradiente <- c("#990066", "#cc3399", "#ff6600", "#ffcc00")
 
@@ -538,8 +443,7 @@ df_pca_2_cat |>
   theme_linedraw() +
   theme(legend.position = "none")
 
-
-# Borrador de lo que sigue ------------------------------------------------
+#gráfico 2
 
 # 1. Definir un factor de escala para las flechas (vectores)
 factor_escala <- 8 
@@ -597,6 +501,8 @@ df_pca_scores |>
   theme_linedraw() +
   theme(legend.position = "bottom")
 
+#Gráfico 3
+
 # 1. Prepara los datos de Rotación para el gráfico de barras
 # df_pca_rotation debe tener las columnas 'variable', 'PC_1', 'PC_2', 'PC_3'
 df_pca_loadings_bar <- df_pca_rotation |>
@@ -627,17 +533,3 @@ df_pca_loadings_bar |>
        title = "Cargas Factoriales en PC1 y PC2") +
   theme_linedraw()
 
-# instrucciones -----------------------------------------------------------
-
-
-
-#2. Dejar una base de datos que tenga, youtuber, subsicritores, views y número de videos. 
-#3. Hacer un indicador tomando 3 variables con las que haré el indicador: suscriptores, views y número de videos. Youtuber no porqeu es unidad de análisis - otra base de datos qeu se llame como varibles de pca. Con esta base de datos hacer pasos que la profe entregó. 
-
-#5. Luego se hace el pca, edepende de cómo queden los gráficos exploratorios, hacer summary y eliminar los outlayers.
-
-#*Sugerencia: *usar ggplot para pca,
-
-#6. gráfcios debo analizar cada gráfico teoricamente, cualquier cosa busacr cómo analizar por youtube. 
-
-#7. intentar cruzar variables y sacar correlaciones antes de hacer el pca
