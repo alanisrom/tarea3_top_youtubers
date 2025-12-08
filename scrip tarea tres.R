@@ -404,7 +404,7 @@ df_pca_select <- df_final_clean |>
 
 #Acabas de tomar tus tres ingredientes principales para el éxito de un canal de YouTube:Suscriptores, Vistas, Cantidad de Videos
 
-# 2. Aplicar la normalización (Estandarización: media=0, desviación estándar=1)
+# Aplicar la normalización (Estandarización: media=0, desviación estándar=1)
 # Esto es necesario para evitar que 'video_views' domine por su gran magnitud.
 df_pca_normal <- scale(df_pca_select)
 
@@ -419,47 +419,55 @@ summary(pca_result)
 #Esto sifnifica que aplicamos PCA para ver si podías combinar estos tres ingredientes en menos "sabores" sin perder el gusto.
 
 #ADJUNTAR ACÁ IMG RESULTADOS 1
-#
 
-#PC1: El PC1 es tu componente más importante. Piensa en él como el "Sabor de Ser un Canal Grande" o la "Popularidad Bruta".Significado: Como explica el 60.54% de todo lo que está pasando en tus datos, esto quiere decir que, en la mayoría de los canales, los tres ingredientes (Suscriptores, Vistas, Videos) van casi siempre de la mano. Si tienes mucho de uno, tienes mucho de los otros. Conclusión: Este PC1 es la evidencia de que hay un factor subyacente de Magnitud del Canal.
 
-#PC2: Si sumas el PC1 y el PC2, ya tienes el 92.90% de la información de tu base de datos.Conclusión: Esto es una gran victoria. Significa que ya no necesitas usar las tres variables originales. Puedes reemplazarlas por solo dos nuevas variables (PC1 y PC2) y tu análisis será casi igual de preciso (solo pierdes el 7.10% de la información).
+#PC1: El PC1 es tu componente más importante. Piensa en él como el "Sabor de Ser un Canal Grande" o la "Popularidad Bruta". Significado: Como explica el 50.29% de la varianza total de los datos, esto quiere decir que, en la estructura de los canales, los tres ingredientes (Subscribers, Video Views, Video Count) están fuertemente correlacionados. Si un canal es grande en una métrica, tiende a serlo en las otras. En Conclusión, este PC1 es la evidencia de que hay un factor subyacente de Magnitud del Canal.
 
-#PCA3: El PC3 es el menos importante, explicando solo el 7.10% de la varianza total.Significado: Este componente captura las diferencias más sutiles entre los canales. Por ejemplo, podría estar destacando canales que tienen muchos videos pero relativamente pocos suscriptores y vistas, o viceversa.Conclusión: Aunque es interesante, este componente no es tan crucial para entender la mayoría de los canales en tu análisis. según tus propios resultados, el PC3 no explica suficiente varianza para justificar su complejidad.
+#PC2: Si sumas el PC1 y el PC2, ya tienes el 82.95% de la información de tu base de datos. Conclusión: Esto es una gran victoria. Significa que ya no necesitas usar las tres variables originales. Puedes reemplazarlas por solo dos nuevas variables (PC1 y PC2) y tu análisis será casi igual de preciso (solo pierdes el 17.05% de la información).
+
+#PCA3: El PC3 es el menos importante, explicando solo el 17.05% de la varianza total. Significado: Este componente captura las diferencias más sutiles entre los canales. Por ejemplo, podría estar destacando canales que tienen muchos videos pero relativamente pocos suscriptores y vistas, o viceversa. Conclusión: Aunque es interesante, este componente no es tan crucial para entender la mayoría de los canales en tu análisis. Según tus propios resultados, el PC3 no explica suficiente varianza para justificar su complejidad y debe ser descartado.
+
+#Aunque el PC3 (con una desviación estándar de $0.7152$) no cumple con el Criterio de Kaiser (que sugiere retener solo los componentes con una desviación estándar mayor a 1), el criterio del 80-90% de Varianza Acumulada es a menudo preferido en la práctica para la visualización y la interpretación, y tú estás en el 82.95%.
 
 #Acontinuación generamos cargas (loading). A partir de esto le ponemos nombres y significados a nuestros dos componenetes principales PCA1 y PCA2
 
 pca_result$rotation
 
-# Las cargas (loadings) te dicen cómo cada variable original contribuye a cada componente principal. Por ejemplo, si 'subscribers_por_millones' tiene una carga alta en PC1, significa que esta variable es muy importante para definir ese componente. Al final te dicen qué tan fuerte se relaciona (correlaciona) cada variable original con el nuevo componente
+# Las cargas (loadings) te dicen cómo cada variable original contribuye a cada componente principal. Por ejemplo, si 'subscribers_por_millones' tiene una carga alta en PC1, significa que esta variable es muy importante para definir ese componente. Al final te dicen qué tan fuerte se relaciona (correlaciona) cada variable original con el nuevo componente. Cuanto más cerca esté un número de 1 o -1, más fuertemente se relaciona esa variable con el componente.
 
 
 #IMAGEN RESULTADO 2
 
-#PC1: Magnitud del Canal (El Factor Común) El PC1 explica más del 60% de la varianza, y sus cargas son:
-  
-#Suscriptores: Muy fuerte (0.687)
+#PC1: El PC1 explica el 50.29% de la varianza total, y sus cargas son:
 
-#Vistas: Muy fuerte (0.698)
+#Suscriptores: Muy fuerte (-0.668)
 
-#Video Count: Débil (0.201)
+#Vistas: Muy fuerte (-0.699)
 
-#Conclusión: El PC1 representa la Magnitud, Popularidad o Éxito General del canal. Un valor alto en PC1 significa que el canal tiene, simultáneamente, muchos Suscriptores y muchas Vistas. Este es el factor común que impulsa el éxito en YouTube.
+#Video Count: Débil (-0.255)
+
+# El PC1 representa la Magnitud, Popularidad o Éxito General del canal. Un valor extremo (negativo) en PC1 significa que el canal tiene, simultáneamente, muchos Suscriptores y muchas Vistas. Este es el factor común que impulsa el éxito en YouTube.
 
 
-#PCA2:Estrategia de Contenido (Volumen vs. Impacto) El PC2 explica cerca del 32% de varianza restante y sus cargas son:
-  
-#Video Count: Extremadamente fuerte (-0.976).
+#PCA2:El PC2 explica el 32.66% de la varianza total (acumulando el 82.95% con PC1) y sus cargas son:
 
-#Suscriptores / Vistas: Muy débil (cercano a cero).
+#Video Count: Extremadamente fuerte (+0.951).
 
-#Conclusión: El PC2 representa la Estrategia o el Volumen de Contenido. Este componente es impulsado casi por completo por la Cantidad de Videos.
+#Las cargas de subscribers_por_millones (-0.305) y video_views (-0.056) son mucho más bajas (cercanas a cero).
 
-#Si un canal tiene un valor alto en PC2 (que en este caso, debido al signo negativo, significa que tiene un Video Count bajo, o si invertimos el signo, un Video Count alto), su éxito se define por el volumen puro de videos.
+#En cnclusión, El PC2 representa la Estrategia o el Volumen de Contenido. Este componente es impulsado casi por completo por la Cantidad de Videos. Si un canal tiene un valor positivo alto en PC2, su éxito se define por el volumen puro de videos (Video Count alto). El PC2 nos ayuda a diferenciar entre canales que alcanzan el éxito (PC1) publicando muchísimo (PC2 alto) versus canales que lo hacen con pocos videos de alto impacto (PC2 bajo).
 
-#El PC2 nos ayuda a diferenciar entre canales que alcanzan el éxito (PC1) publicando muchísimo (PC2) versus canales que lo hacen con pocos videos de alto impacto (bajo PC2). 
+#PC3: El PC3 captura la varianza que queda, destacando una diferencia clave entre las métricas de audiencia. Sus cargas son:
 
-#Generar Biplot del PCA
+#subscribers_por_millones tiene una carga negativa alta de -0.679.
+
+#video_views tiene una carga positiva alta de +0.713.
+
+#A partir de esto, este componente indica un trade-off (intercambio) o una diferencia en la eficiencia de conversión. Un canal con un PC3 positivo alto tiende a tener muchas video_views en relación con sus subscribers. Un canal con un PC3 bajo (negativo) tiende a tener muchos subscribers que han generado menos video_views.
+
+
+# Generar Biplot ----------------------------------------------------------
+
 
 #El gráfico que debes crear se llama Biplot. Este gráfico te permite ver, en un solo lugar, dos cosas:
   
@@ -467,20 +475,11 @@ pca_result$rotation
 
 #Cómo se relacionan tus variables originales (Suscriptores, Vistas, Videos) con esos dos nuevos factores (flechas).
 
-# borrados paso a paso ----------------------------------------------------
 
 df_pca_2 <- df_pca_normal |> 
   prcomp()
 
 df_pca_2
-
-#Resultado 3 imagen
-
-#PC1 (1.348): Este componente tiene la mayor Desviación Estándar (y el mayor Valor Propio, 1.816). Esto confirma que el PC1 es el factor más importante, explicando la mayor parte de la información (varianza) de tus datos (60.5%).
-
-#PC2 (0.985): Es el segundo factor más fuerte.
-
-#Decisión: Como vimos antes, al usar solo PC1 y PC2, ya estás explicando el 92.9% de la información total, por lo que puedes ignorar el PC3.
 
 df_pca_2 |> 
   broom::tidy(matrix = "eigenvalues") |> 
@@ -505,7 +504,7 @@ df_pca_2_cat <- df_pca_2 |>
   pivot_wider(names_from = "PC",
               names_prefix = "PC_",
               values_from = "value") |> 
-  bind_cols(df_final)
+  bind_cols(df_final_clean)
 
 head(df_pca_2_cat)
 
@@ -524,7 +523,7 @@ df_pca_2_cat |>
        y = "Componente 2 (10%)") +
   theme_linedraw() +
   theme(legend.position = "none")
-```
+
 
 #Agregamos *kernel density estimation*:
   
@@ -533,105 +532,100 @@ df_pca_2_cat |>
   geom_point(alpha = 0.5, size = 0.2) +
   geom_density_2d(aes(color = after_stat(level)), linewidth = 0.8) +
   scale_color_gradientn(colours = colores_gradiente) +
-  labs(x = "Componente 1 (64,5%)",
-       y = "Componente 2 (10%)") +
+  labs(x = "Componente 1 (50.29
+       %)",
+       y = "Componente 2 (32.66%)") +
   theme_linedraw() +
   theme(legend.position = "none")
 
 
-#_____________-
+# Borrador de lo que sigue ------------------------------------------------
 
-#BORRADOR DE INTENTO DE GRÁFICO (NO FUNCIONA)
+# 1. Definir un factor de escala para las flechas (vectores)
+factor_escala <- 8 
 
-#ejecutar pca
-pca_result <- prcomp(df_pca_normal)
-
-#colocamos los puntos en la base completa
-
-df_pca_scores <- pca_result |>
-  broom::tidy(matrix = "scores") |> 
-  pivot_wider(names_from = "PC",
-              names_prefix = "PC_",
-              values_from = "value") |> 
-  # Unimos las coordenadas PC1 y PC2 al dataframe original de canales
-  bind_cols(df_final)
-
-# 3. Obtener las Coordenadas de las Variables (Rotation - Las flechas)
-df_pca_rotation <- pca_result |> 
-  broom::tidy(matrix = "rotation") |> 
-  filter(PC %in% c(1, 2)) |> # Solo PC1 y PC2
-  pivot_wider(names_from = PC, 
-              names_prefix = "PC_", 
-              values_from = value) |>
-  rename(variable = column)
-
-# Definimos un factor de escala para que las flechas se vean grandes en el gráfico
-factor_escala <- 5 
-df_pca_rotation <- df_pca_rotation |>
+# 2. ESCALAMOS LA ROTACIÓN 
+df_pca_rotation_scaled <- df_pca_rotation |>
   mutate(
     PC_1_scaled = PC_1 * factor_escala,
     PC_2_scaled = PC_2 * factor_escala
   )
 
-# Filtraremos canales que están en los extremos (los más grandes o los más extremos en volumen/estrategia)
-df_outliers_pca <- df_pca_scores |>
-  filter(PC_1 > quantile(PC_1, 0.95) | # Top 5% en Magnitud (PC1)
-           abs(PC_2) > quantile(abs(PC_2), 0.95)) # Top 5% en Estrategia/Volumen (PC2 extremo)
-
-# --- PASO 2: GENERAR EL BI PLOT FINAL ---
-grafico_biplot_mejorado <- ggplot() +
+df_pca_scores |>
+  ggplot(aes(x = PC_1, y = PC_2)) +
+  geom_hline(yintercept = 0, color = "grey80") +
+  geom_vline(xintercept = 0, color = "grey80") +
   
-  # 1. Puntos: Muestra cada canal de YouTube (Más pequeños y transparentes)
-  geom_point(
-    data = df_pca_scores,
-    aes(x = PC_1, y = PC_2, color = category),
-    alpha = 0.3, # Reducimos la opacidad
-    size = 1.5
-  ) +
+  # 1. Puntos (Canales) - Coloreados por la Categoría
+  geom_point(aes(color = category), # ¡Añadimos el color por categoría!
+             alpha = 0.5,
+             size = 1.5) +
   
-  # 2. Vectores (Flechas):
+  # 2. Vectores (Flechas) - Usamos el df_pca_rotation_scaled
   geom_segment(
-    data = df_pca_rotation,
-    aes(x = 0, y = 0, xend = PC_1_scaled, yend = PC_2_scaled),
-    arrow = arrow(length = unit(0.2, "cm")),
-    color = "black", 
-    linewidth = 0.8
+    data = df_pca_rotation_scaled,
+    mapping = aes(
+      x = 0,
+      xend = PC_1_scaled,
+      y = 0,
+      yend = PC_2_scaled
+    ),
+    color = "#cc3399", 
+    arrow = arrow(length = unit(0.2, "cm"), type = "closed")
   ) +
   
-  # 3. Etiquetas de las Variables (Flechas):
+  # 3. Etiquetas de Variables
   geom_label_repel(
-    data = df_pca_rotation,
-    aes(x = PC_1_scaled, y = PC_2_scaled, label = variable),
-    color = "black",
-    size = 3.5,
-    box.padding = 0.5
+    data = df_pca_rotation_scaled,
+    aes(
+      x = PC_1_scaled,
+      y = PC_2_scaled,
+      label = variable 
+    ),
+    color = "#990066",
+    fill = "#FFFFFF80",
+    size = 3
   ) +
   
-  # 4. Etiquetas de los Outliers (Nombres de los Canales más interesantes)
-  geom_text_repel(
-    data = df_outliers_pca, # <--- ¡Aquí se usa la variable que faltaba!
-    aes(x = PC_1, y = PC_2, label = youtuber),
-    size = 3,
-    max.overlaps = 50, 
-    segment.color = 'grey50'
-  ) +
-  
-  # 5. Configuración
-  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +
-  geom_vline(xintercept = 0, linetype = "dashed", color = "grey") +
-  
+  # 4. Títulos y Etiquetas CORREGIDOS con tus valores de varianza
   labs(
-    x = "PC1: Magnitud y Popularidad (60.5%)",
-    y = "PC2: Estrategia de Contenido/Volumen (32.4%)",
+    x = "PC1 (50.29%)", 
+    y = "PC2 (32.66%)", 
     title = "Biplot: Canales de YouTube en las Dimensiones de Éxito",
-    subtitle = "Los puntos más extremos han sido etiquetados para su interpretación.",
-    color = "Categoría"
+    color = "Categoría" 
   ) +
+  theme_linedraw() +
+  theme(legend.position = "bottom")
+
+# 1. Prepara los datos de Rotación para el gráfico de barras
+# df_pca_rotation debe tener las columnas 'variable', 'PC_1', 'PC_2', 'PC_3'
+df_pca_loadings_bar <- df_pca_rotation |>
+  select(variable, PC_1, PC_2) |> # Seleccionamos solo PC1 y PC2
+  pivot_longer(names_to = "pca", values_to = "valor_pca", cols = c(PC_1, PC_2))
+
+# 2. Graficamos las cargas de las variables en PC1 y PC2
+df_pca_loadings_bar |>
+  ggplot(aes(x = fct_reorder(variable, valor_pca), y = valor_pca)) +
+  geom_col(fill = "#006699") + 
+  geom_hline(yintercept = 0) +
   
-  theme_minimal()
-
-
-
+  # Etiquetas de valor
+  geom_text(aes(label = round(valor_pca, 2),
+                y = if_else(valor_pca >= 0,
+                            valor_pca + 0.05,  
+                            valor_pca - 0.05)), 
+            size = 3) +
+  
+  coord_flip() +
+  facet_grid(cols = vars(pca),
+             labeller = labeller(
+               PC1 = "Componente 1 (50.29%)", 
+               PC2 = "Componente 2 (32.66%)"
+             )) +
+  labs(x = NULL,
+       y = "Peso de la Variable (Carga)",
+       title = "Cargas Factoriales en PC1 y PC2") +
+  theme_linedraw()
 
 # instrucciones -----------------------------------------------------------
 
