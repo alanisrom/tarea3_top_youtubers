@@ -534,7 +534,7 @@ Este componente refleja un **trade-off** entre suscriptores y vistas.
 
 En términos simples, el PC3 compara la **eficiencia de conversión** entre quién te sigue y cuántas vistas realmente genera tu contenido.
 
-## 5. Visualización 
+## 5. Visualización
 
 ```{r}
 df_pca_2 <- df_pca_normal |> 
@@ -702,3 +702,13 @@ df_pca_loadings_bar |>
 ```
 
 ![El gráfico muestra qué variables son las que más influyen en cada componente. En el primer componente (PC1), lo que más pesa son los suscriptores y las visualizaciones: estas dos variables son las que realmente están “armando” este eje, así que PC1 representa muy bien el nivel de éxito o popularidad de un canal. En cambio, la cantidad de videos casi no influye aquí. En el segundo componente (PC2) ocurre lo contrario: prácticamente todo el peso lo tiene la cantidad de videos publicados, lo que significa que este eje resume el nivel de producción o cuánto contenido sube un canal. Los suscriptores y las visualizaciones aportan muy poquito a esta segunda dimensión. En pocas palabras: **PC1 mide éxito; PC2 mide volumen de contenido**.](images/clipboard-1600986597.png)
+
+## 6. Conclusión
+
+El análisis realizado permite entender con mayor profundidad cuáles son las dimensiones que explican el éxito de los principales canales de YouTube hasta 2024. A partir de la limpieza rigurosa de datos, la eliminación de valores extremos y la exploración gráfica, fue posible observar tendencias generales que ya adelantaban parte de la estructura interna del fenómeno: las categorías Entertainment y Music dominan la generación de canales exitosos, la creación de nuevos canales muestra un peak entre 2014 y 2017 seguido de una fuerte desaceleración, y la relación entre productividad (videos publicados), alcance (vistas) y popularidad (suscriptores) no es lineal, sino dependiente del posicionamiento y consolidación del canal.
+
+En este contexto, el Análisis de Componentes Principales (PCA) confirma que el éxito en YouTube se organiza en torno a dos dimensiones fundamentales. La primera está asociada al alcance acumulado, explicado principalmente por la relación entre suscriptores y vistas totales; este componente refleja la capacidad del canal de atraer y mantener audiencias masivas. La segunda dimensión se vincula con la intensidad productiva, donde la cantidad de videos publicados aparece como un indicador que explica diferencias relevantes entre canales, pero que no garantiza por sí mismo altos niveles de suscripción o visibilidad.
+
+En conjunto, los resultados sugieren que el éxito en YouTube no depende únicamente de producir grandes volúmenes de contenido, ni tampoco solo de acumular vistas o seguidores: es la combinación entre una trayectoria sostenida, un alcance significativo y una dinámica de crecimiento inicial suficientemente potente lo que permite que un canal se sitúe dentro del grupo más influyente de la plataforma. Además, la evidencia muestra que entrar al “top” es hoy mucho más difícil que en la década pasada, dado que el ecosistema se encuentra altamente consolidado y los canales con más tiempo concentran la mayor parte del tráfico y la atención.
+
+En definitiva, este estudio permite concluir que las dimensiones que estructuran el éxito de los canales top de YouTube corresponden a un equilibrio entre producción, visibilidad y popularidad acumulada, donde el posicionamiento temprano y la capacidad de mantener relevancia a lo largo del tiempo juegan un rol decisivo. El PCA ayuda a sintetizar este fenómeno mostrando que, más allá de las diferencias entre categorías, la plataforma tiende a premiar canales que logran destacarse simultáneamente en alcance y trayectoria, consolidando un ecosistema crecientemente competitivo y desigual.
